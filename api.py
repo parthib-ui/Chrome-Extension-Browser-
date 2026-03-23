@@ -209,6 +209,92 @@ def all_keys():
     }
 # ---------------- MAIN API ----------------
 
+@app.get("/scan-url")
+def scan_url(url: str):
+
+    url = normalize_url(url)
+
+    if not check_url_format(url):
+        return {"error": "Invalid URL"}
+
+    ext = tldextract.extract(url)
+
+    domain = ext.domain + "." + ext.suffix
+
+    short = check_shortener(domain)
+
+    keyword_flag = check_keywords(url)
+
+    ip = get_ip(domain)
+
+    try:
+
+        response = requests.post(
+            "https://www.virustotal.com/api/v3/urls",
+            headers=headers,
+            data={"url": url}
+        )
+
+        result = response.json()
+
+    except Exception as e:
+
+        return {"error": "VirusTotal failed"}
+
+    if "data" not in result:
+        return {"error": "VT error"}
+
+    analysis_id = result["data"]["id"]
+
+    time.sleep(5)
+
+    result_response = requests.get(
+        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
+        headers=headers
+    )
+
+    final = result_response.json()
+
+    stats = final["data"]["attributes"]["stats"]
+
+    malicious = stats.get("malicious", 0)
+    suspicious = stats.get("suspicious", 0)
+    harmless = stats.get("harmless", 0)
+    undetected = stats.get("undetected", 0)
+
+    score = 0
+
+    if malicious > 0:
+        score += 5
+
+    if suspicious > 0:
+        score += 3
+
+    if short:
+        score += 2
+
+    if keyword_flag:
+        score += 2
+
+    if undetected > harmless:
+        score += 1
+
+    if score >= 5:
+        status = "MALICIOUS"
+    elif score >= 3:
+        status = "SUSPICIOUS"
+    elif score >= 1:
+        status = "UNKNOWN"
+    else:
+        status = "SAFE"
+
+    return {
+        "url": url,
+        "status": status,
+        "score": score,
+        "stats": stats
+    }
+
 @app.get("/check")
 def check_url(
     url: str,
