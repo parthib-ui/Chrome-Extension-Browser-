@@ -4,60 +4,169 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>URL SENTINEL — Safe Browsing Checker</title>
-  <meta name="description" content="Check any URL for phishing, malware, or suspicious activity before visiting it." />
+  <title>URL Sentinel — Scan URLs. Stay Protected.</title>
+  <meta name="description"
+    content="Scan any URL for phishing, malware, or suspicious activity before visiting it. Powered by VirusTotal." />
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-  <div class="page">
-    <div class="card">
-
-      <div class="logo-wrap">
-        <div class="logo-icon"><img
-            src="/assets/pngtree-blue-shield-badge-clipart-illustration-png-image_16042877-removebg-preview.png" alt=""
-            width="250px">
-        </div>
-        <div class="logo-title">URL SENTINEL</div>
-      </div>
-      <div class="logo-sub">Powered by VirusTotal · Check any URL before you visit</div>
-
-      <!-- API KEY ROW -->
-      <div class="api-row">
-        <div class="input-wrap" style="margin:0">
-          <label for="apikey">API Key <span style="color:#444;font-weight:400">(optional – higher limits)</span></label>
-          <input id="apikey" class="input-field" type="text" placeholder="Paste your API key…" autocomplete="off" />
-        </div>
-        <button id="genKeyBtn" class="btn btn-sm" onclick="generateKey()" style="margin-top:22px">
-          Generate Key
-        </button>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- URL INPUT -->
-      <div class="input-wrap">
-        <label for="urlInput">URL to Check</label>
-        <input id="urlInput" class="input-field" type="text" placeholder="https://example.com" autocomplete="off"
-          spellcheck="false" />
-      </div>
-
-      <button id="scanBtn" class="btn btn-primary" onclick="scanUrl()">
-        <div class="spinner" id="spinner"></div>
-        <span id="btnText">Scan &amp; Check URL</span>
-      </button>
-
-      <!-- RESULT -->
-      <div id="resultBox" class="result-box"></div>
-
-      <!-- ERROR -->
-      <div id="errorMsg" class="error-msg"></div>
-
-    </div>
-    <div class="footer">URL Shield &copy; 2026 &middot; Scans powered by VirusTotal</div>
+<!-- ===== LOADING SCREEN ===== -->
+<div id="loadingScreen">
+  <div class="load-logo">
+    <img src="../assets/pngtree-blue-shield-badge-clipart-illustration-png-image_16042877-removebg-preview.png" alt="Logo" />
+    <span class="load-logo-text">URL SENTINEL</span>
   </div>
 
+  <div class="loader">
+    <svg
+      preserveAspectRatio="xMidYMid meet"
+      width="40" height="40" viewBox="0 0 40 40"
+      class="container"
+    >
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#5a4ff3"/>
+          <stop offset="50%"  stop-color="#35a2d2"/>
+          <stop offset="100%" stop-color="#9c40fc"/>
+        </linearGradient>
+      </defs>
+      <path
+        d="M29.76 18.72 c0 7.28 -3.92 13.6 -9.84 16.96 c-2.88 1.68 -6.24 2.64 -9.84 2.64 c-3.6 0 -6.88 -0.96 -9.76 -2.64 c0 -7.28 3.92 -13.52 9.84 -16.96 c2.88 -1.68 6.24 -2.64 9.76 -2.64 S26.88 17.04 29.76 18.72 c5.84 3.36 9.76 9.68 9.84 16.96 c-2.88 1.68 -6.24 2.64 -9.76 2.64 c-3.6 0 -6.88 -0.96 -9.84 -2.64 c-5.84 -3.36 -9.76 -9.68 -9.76 -16.96 c0 -7.28 3.92 -13.6 9.76 -16.96 C25.84 5.12 29.76 11.44 29.76 18.72z"
+        pathLength="100" stroke-width="4" fill="none" class="track"
+      ></path>
+      <path
+        d="M29.76 18.72 c0 7.28 -3.92 13.6 -9.84 16.96 c-2.88 1.68 -6.24 2.64 -9.84 2.64 c-3.6 0 -6.88 -0.96 -9.76 -2.64 c0 -7.28 3.92 -13.52 9.84 -16.96 c2.88 -1.68 6.24 -2.64 9.76 -2.64 S26.88 17.04 29.76 18.72 c5.84 3.36 9.76 9.68 9.84 16.96 c-2.88 1.68 -6.24 2.64 -9.76 2.64 c-3.6 0 -6.88 -0.96 -9.84 -2.64 c-5.84 -3.36 -9.76 -9.68 -9.76 -16.96 c0 -7.28 3.92 -13.6 9.76 -16.96 C25.84 5.12 29.76 11.44 29.76 18.72z"
+        pathLength="100" stroke-width="4" fill="none" class="car"
+      ></path>
+    </svg>
+  </div>
+
+  <div class="load-hint">Initialising security engines…</div>
+</div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <a class="nav-logo" href="index.html">
+      <img src="../assets/pngtree-blue-shield-badge-clipart-illustration-png-image_16042877-removebg-preview.png"
+        alt="URL Sentinel Logo" />
+      <span class="nav-logo-text">URL SENTINEL</span>
+    </a>
+
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-eyebrow">🛡️ Real-time URL Safety Scanner</div>
+    <h1 class="hero-heading">
+      <span>Scan URLs.<br>Stay Protected.</span>
+    </h1>
+    <p class="hero-sub"><span id="typewriter"></span><span class="tw-cursor">|</span></p>
+
+    <style>
+      .tw-cursor {
+        display: inline-block;
+        color: var(--accent2);
+        animation: blink 0.75s step-start infinite;
+        margin-left: 1px;
+      }
+      @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+    </style>
+
+  </section>
+
+  <!-- ===== SCAN CARD ===== -->
+  <section class="scan-section">
+    <div class="scan-card">
+      <div class="scan-label">Enter a URL to scan</div>
+      <input id="urlInput" class="scan-input" type="text" placeholder="https://example.com/some-link-you-received"
+        autocomplete="off" spellcheck="false" />
+      <button id="scanBtn" class="btn-scan" onclick="scanUrl()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">Scan URL</span>
+      </button>
+
+      <!-- Result -->
+      <div id="resultBox" class="result-box"></div>
+      <!-- Error -->
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURE CARDS ===== -->
+  <div class="features">
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title">Lightning Fast</div>
+      <div class="feat-desc">Results delivered in seconds using VirusTotal's global threat intelligence.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔬</div>
+      <div class="feat-title">90+ Engines</div>
+      <div class="feat-desc">Every URL is checked against 90+ anti-malware and phishing detection engines.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔒</div>
+      <div class="feat-title">Safe Redirect</div>
+      <div class="feat-desc">Safe URLs auto-redirect. Dangerous ones trigger a full warning before you proceed.</div>
+    </div>
+  </div>
+
+  <!-- ===== SCAN HISTORY ===== -->
+  <section class="history-section">
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">History</div>
+        <button class="btn-clear" onclick="clearHistory()">🗑 Clear All</button>
+      </div>
+      <div id="historyList">
+        <div class="history-empty">
+          <div class="history-empty-icon">🕒</div>
+          <div class="history-empty-text">No history yet. Start scanning URLs!</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-bar">Made by URL Sentinel &nbsp;·&nbsp; Powered by VirusTotal</div>
+
+  <script>
+    (function () {
+      const lines = [
+        "Detect phishing links before you click.",
+        "Scan any URL across 90+ security engines.",
+        "Stop malware before it reaches your device.",
+        "Safe URLs redirect. Dangerous ones warn you.",
+        "Protect yourself from scams and fraud links.",
+        "Real-time threat intelligence. Zero friction."
+      ];
+      let li = 0, ci = 0, deleting = false;
+      const el = document.getElementById("typewriter");
+      function type() {
+        const txt = lines[li];
+        if (!deleting) {
+          el.textContent = txt.slice(0, ++ci);
+          if (ci === txt.length) { deleting = true; setTimeout(type, 1800); return; }
+        } else {
+          el.textContent = txt.slice(0, --ci);
+          if (ci === 0) { deleting = false; li = (li + 1) % lines.length; }
+        }
+        setTimeout(type, deleting ? 38 : 58);
+      }
+      type();
+    })();
+  </script>
+  <script>
+    // ---- Loading screen: dismiss after 3 seconds ----
+    window.addEventListener("DOMContentLoaded", function () {
+      var screen = document.getElementById("loadingScreen");
+      setTimeout(function () {
+        screen.classList.add("hidden");
+        setTimeout(function () { screen.remove(); }, 650);
+      }, 3000);
+    });
+  </script>
   <script src="script.js"></script>
 </body>
 

@@ -1,157 +1,137 @@
 const BASE = "http://98.81.87.78";
 
-// ---- Key management ----
-function saveKey(key) {
-  localStorage.setItem("api_key", key);
+// ===================== HISTORY =====================
+const HISTORY_KEY = "url_sentinel_history";
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch { return []; }
 }
-function loadKey() {
-  return localStorage.getItem("api_key") || "";
+function saveHistory(h) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50)));
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const keyInput = document.getElementById("apikey");
-  const urlInput = document.getElementById("urlInput");
-  const btn = document.getElementById("scanBtn");
-  const spinner = document.getElementById("spinner");
-  const btnText = document.getElementById("btnText");
-  const resultBox = document.getElementById("resultBox");
-  const errorMsg = document.getElementById("errorMsg");
-
-  if (keyInput) keyInput.value = loadKey();
-
-  // Auto-save API key as user types
-  if (keyInput) {
-    keyInput.addEventListener("input", () => saveKey(keyInput.value.trim()));
-  }
-
-  // Allow Enter key to trigger scan
-  if (urlInput) {
-    urlInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") scanUrl();
-    });
-  }
-});
-
-async function generateKey() {
-  const btn = document.getElementById("genKeyBtn");
-  btn.disabled = true;
-  btn.textContent = "Generating…";
-  try {
-    const res = await fetch(BASE + "/generate-key", { method: "POST" });
-    const data = await res.json();
-    const keyInput = document.getElementById("apikey");
-    keyInput.value = data.api_key;
-    saveKey(data.api_key);
-  } catch (e) {
-    showError("Failed to generate key. Is the server running?");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Generate Key";
-  }
+function addToHistory(url, status) {
+  const h = getHistory();
+  h.unshift({ url, status, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+  saveHistory(h);
+  renderHistory();
 }
-
-async function scanUrl() {
-  const urlInput = document.getElementById("urlInput");
-  const keyInput = document.getElementById("apikey");
-  const btn = document.getElementById("scanBtn");
-  const spinner = document.getElementById("spinner");
-  const btnText = document.getElementById("btnText");
-  const resultBox = document.getElementById("resultBox");
-  const errorMsg = document.getElementById("errorMsg");
-
-  const rawUrl = urlInput.value.trim();
-  const apiKey = keyInput ? keyInput.value.trim() : loadKey();
-
-  // Hide previous results
-  resultBox.style.display = "none";
-  errorMsg.style.display = "none";
-
-  if (!rawUrl) {
-    showError("Please enter a URL to scan.");
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+}
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  if (!list) return;
+  const h = getHistory();
+  if (h.length === 0) {
+    list.innerHTML = `
+      <div class="history-empty">
+        <div class="history-empty-icon">🕒</div>
+        <div class="history-empty-text">No history yet. Start scanning URLs!</div>
+      </div>`;
     return;
   }
+  list.innerHTML = `<div class="history-list">${h.map(item => `
+    <div class="history-item" onclick="reScan('${encodeURIComponent(item.url)}')">
+      <div class="h-dot ${item.status.toLowerCase()}"></div>
+      <div class="h-url">${item.url}</div>
+      <div class="h-badge ${item.status.toLowerCase()}">${item.status}</div>
+      <div class="h-time">${item.time}</div>
+    </div>`).join("")}
+  </div>`;
+}
+function reScan(encodedUrl) {
+  const url = decodeURIComponent(encodedUrl);
+  const input = document.getElementById("urlInput");
+  if (input) { input.value = url; input.focus(); }
+}
 
-  // Show loading
+// ===================== SCAN =====================
+async function scanUrl() {
+  const urlInput = document.getElementById("urlInput");
+  const btn      = document.getElementById("scanBtn");
+  const spinner  = document.getElementById("spinner");
+  const btnText  = document.getElementById("btnText");
+  const resultBox = document.getElementById("resultBox");
+  const errorMsg  = document.getElementById("errorMsg");
+
+  const rawUrl = urlInput.value.trim();
+  resultBox.style.display = "none";
+  errorMsg.style.display  = "none";
+
+  if (!rawUrl) { showError("Please enter a URL to scan."); return; }
+
   btn.disabled = true;
   spinner.style.display = "block";
-  btnText.textContent = "Scanning…";
+  btnText.textContent   = "Scanning…";
 
   try {
-    const headers = {};
-    // Use /check with auth if key provided, else /scan-url (no auth)
-    let endpoint;
-    if (apiKey) {
-      endpoint = `${BASE}/check?url=${encodeURIComponent(rawUrl)}`;
-      headers["x-api-key"] = apiKey;
-    } else {
-      endpoint = `${BASE}/scan-url?url=${encodeURIComponent(rawUrl)}`;
-    }
-
-    const res = await fetch(endpoint, { headers });
+    const endpoint = `${BASE}/scan-url?url=${encodeURIComponent(rawUrl)}`;
+    const res  = await fetch(endpoint);
     const data = await res.json();
 
-    if (data.error) {
-      showError("Error: " + data.error);
-      return;
-    }
+    if (data.error) { showError("Error: " + data.error); return; }
 
-    const status = data.status; // SAFE | MALICIOUS | SUSPICIOUS | UNKNOWN
+    const status = data.status;
+    addToHistory(data.url || rawUrl, status);
 
     if (status === "SAFE") {
-      // Show safe result, then redirect after short delay
       showResult(data, rawUrl);
-      setTimeout(() => {
-        window.location.href = data.url || rawUrl;
-      }, 1800);
+      setTimeout(() => { window.location.href = data.url || rawUrl; }, 1800);
     } else {
-      // Redirect to warning page with data in sessionStorage
       sessionStorage.setItem("warnData", JSON.stringify(data));
-      sessionStorage.setItem("warnUrl", data.url || rawUrl);
+      sessionStorage.setItem("warnUrl",  data.url || rawUrl);
       window.location.href = "warning.html";
     }
-
   } catch (e) {
-    showError("Could not reach the server. Please check your connection.");
+    showError("Could not reach the server. Is it running?");
   } finally {
     btn.disabled = false;
     spinner.style.display = "none";
-    btnText.textContent = "Scan & Check URL";
+    btnText.textContent   = "Scan URL";
   }
 }
 
+// ===================== RESULT =====================
 function showResult(data, rawUrl) {
   const resultBox = document.getElementById("resultBox");
   const status = data.status;
-
-  const statusMap = {
-    SAFE:       { cls: "safe",      icon: "✅", colorCls: "status-safe",    label: "Safe" },
-    MALICIOUS:  { cls: "malicious", icon: "🚨", colorCls: "status-danger",  label: "Malicious" },
-    SUSPICIOUS: { cls: "suspicious",icon: "⚠️", colorCls: "status-warn",    label: "Suspicious" },
-    UNKNOWN:    { cls: "unknown",   icon: "❓", colorCls: "status-unknown",  label: "Unknown" },
+  const map = {
+    SAFE:       { cls: "safe",       emoji: "✅", colorCls: "c-safe",    label: "Safe — Redirecting…" },
+    MALICIOUS:  { cls: "malicious",  emoji: "🚨", colorCls: "c-danger",  label: "Malicious" },
+    SUSPICIOUS: { cls: "suspicious", emoji: "⚠️", colorCls: "c-warn",    label: "Suspicious" },
+    UNKNOWN:    { cls: "unknown",    emoji: "❓", colorCls: "c-unknown",  label: "Unknown" },
   };
-  const s = statusMap[status] || statusMap["UNKNOWN"];
-
+  const s = map[status] || map["UNKNOWN"];
   resultBox.className = `result-box ${s.cls}`;
   resultBox.innerHTML = `
-    <div class="result-label">Scan Result</div>
-    <div class="result-status ${s.colorCls}">
-      <span>${s.icon}</span> ${s.label}
+    <div class="result-head">
+      <span class="result-status-emoji">${s.emoji}</span>
+      <span class="result-status-text ${s.colorCls}">${s.label}</span>
     </div>
     <div class="result-url">${data.url || rawUrl}</div>
     ${data.stats ? `
     <div class="result-meta">
-      <div class="meta-item"><div class="meta-key">Malicious</div><div class="meta-val status-danger">${data.stats.malicious ?? 0}</div></div>
-      <div class="meta-item"><div class="meta-key">Suspicious</div><div class="meta-val status-warn">${data.stats.suspicious ?? 0}</div></div>
-      <div class="meta-item"><div class="meta-key">Harmless</div><div class="meta-val status-safe">${data.stats.harmless ?? 0}</div></div>
-      <div class="meta-item"><div class="meta-key">Undetected</div><div class="meta-val">${data.stats.undetected ?? 0}</div></div>
+      <div class="meta-chip"><div class="val c-danger">${data.stats.malicious ?? 0}</div><div class="lbl">Malicious</div></div>
+      <div class="meta-chip"><div class="val c-warn">${data.stats.suspicious ?? 0}</div><div class="lbl">Suspicious</div></div>
+      <div class="meta-chip"><div class="val c-safe">${data.stats.harmless ?? 0}</div><div class="lbl">Harmless</div></div>
+      <div class="meta-chip"><div class="val">${data.stats.undetected ?? 0}</div><div class="lbl">Undetected</div></div>
     </div>` : ""}
-    ${status === "SAFE" ? '<div style="margin-top:12px;font-size:0.82rem;color:var(--safe);">✅ Redirecting you to the site…</div>' : ""}
+    ${status === "SAFE" ? '<div class="result-redirect">✅ Redirecting you to the site in 2 seconds…</div>' : ""}
   `;
   resultBox.style.display = "block";
 }
 
 function showError(msg) {
-  const errorMsg = document.getElementById("errorMsg");
-  errorMsg.textContent = msg;
-  errorMsg.style.display = "block";
+  const e = document.getElementById("errorMsg");
+  e.textContent = msg;
+  e.style.display = "block";
 }
+
+// ===================== ENTER KEY =====================
+document.addEventListener("DOMContentLoaded", () => {
+  renderHistory();
+  const input = document.getElementById("urlInput");
+  if (input) input.addEventListener("keydown", e => { if (e.key === "Enter") scanUrl(); });
+});
