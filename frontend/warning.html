@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warning — Unsafe URL Detected | URL Shield</title>
+  <meta name="description" content="This URL has been flagged as potentially dangerous." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="warning-page">
+
+<div class="page">
+  <div class="card">
+
+    <!-- Icon + Title (filled by JS) -->
+    <div id="warnIcon" class="warn-icon-wrap malicious">🚨</div>
+    <div id="warnTitle" class="warn-title malicious">Danger Detected</div>
+    <p id="warnDesc" class="warn-desc">
+      This URL has been flagged as <strong>malicious</strong> by security engines.
+      Visiting it may put your device and personal data at risk.
+    </p>
+
+    <!-- URL box -->
+    <div class="warn-url-box">
+      <span>Destination URL</span>
+      <span id="warnUrlText">—</span>
+    </div>
+
+    <!-- VirusTotal stats -->
+    <div class="warn-stats" id="warnStats" style="display:none">
+      <div class="warn-stat">
+        <div class="warn-stat-val stat-malicious" id="statMalicious">0</div>
+        <div class="warn-stat-lbl">Malicious</div>
+      </div>
+      <div class="warn-stat">
+        <div class="warn-stat-val stat-suspicious" id="statSuspicious">0</div>
+        <div class="warn-stat-lbl">Suspicious</div>
+      </div>
+      <div class="warn-stat">
+        <div class="warn-stat-val stat-harmless" id="statHarmless">0</div>
+        <div class="warn-stat-lbl">Harmless</div>
+      </div>
+      <div class="warn-stat">
+        <div class="warn-stat-val stat-undetected" id="statUndetected">0</div>
+        <div class="warn-stat-lbl">Undetected</div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="warn-actions">
+      <button class="btn btn-ghost" onclick="goBack()">
+        ← Go Back to Safety
+      </button>
+      <button class="btn btn-danger" id="proceedBtn" onclick="proceedAnyway()">
+        ⚠️ Proceed Anyway
+      </button>
+    </div>
+
+    <a href="index.html" class="back-link">← Check another URL</a>
+  </div>
+  <div class="footer">URL Shield &copy; 2026 &middot; Scans powered by VirusTotal</div>
+</div>
+
+<script>
+// ---- Read data passed from index page ----
+const rawData = sessionStorage.getItem("warnData");
+const targetUrl = sessionStorage.getItem("warnUrl");
+
+if (!rawData || !targetUrl) {
+  // No data – redirect home
+  window.location.href = "index.html";
+}
+
+const data = JSON.parse(rawData);
+const status = data.status; // MALICIOUS | SUSPICIOUS | UNKNOWN
+
+// ---- Status config ----
+const config = {
+  MALICIOUS:  { icon: "🚨", cls: "malicious", title: "Malicious URL",   desc: `This URL has been flagged as <strong>MALICIOUS</strong> by VirusTotal security engines. Visiting it may expose you to malware, phishing attacks, or data theft.` },
+  SUSPICIOUS: { icon: "⚠️", cls: "suspicious", title: "Suspicious URL", desc: `This URL appears <strong>SUSPICIOUS</strong>. It shows signs commonly associated with phishing or scam pages. Proceed only if you trust the source.` },
+  UNKNOWN:    { icon: "❓", cls: "unknown",    title: "Unknown URL",    desc: `This URL is <strong>UNKNOWN</strong> and hasn't been verified as safe. Limited data is available—proceed with caution.` },
+};
+
+const cfg = config[status] || config["UNKNOWN"];
+
+// Apply to DOM
+document.getElementById("warnIcon").className = `warn-icon-wrap ${cfg.cls}`;
+document.getElementById("warnIcon").textContent = cfg.icon;
+document.getElementById("warnTitle").className = `warn-title ${cfg.cls}`;
+document.getElementById("warnTitle").textContent = cfg.title;
+document.getElementById("warnDesc").innerHTML = cfg.desc;
+
+// URL
+document.getElementById("warnUrlText").textContent = targetUrl;
+
+// Stats
+if (data.stats) {
+  document.getElementById("statMalicious").textContent  = data.stats.malicious  ?? 0;
+  document.getElementById("statSuspicious").textContent = data.stats.suspicious ?? 0;
+  document.getElementById("statHarmless").textContent   = data.stats.harmless   ?? 0;
+  document.getElementById("statUndetected").textContent = data.stats.undetected ?? 0;
+  document.getElementById("warnStats").style.display = "grid";
+}
+
+// Tweak danger button for non-malicious
+if (status !== "MALICIOUS") {
+  const btn = document.getElementById("proceedBtn");
+  btn.style.background = status === "SUSPICIOUS"
+    ? "linear-gradient(135deg, #f59e0b, #d97706)"
+    : "linear-gradient(135deg, #8b5cf6, #7c3aed)";
+  btn.style.boxShadow = status === "SUSPICIOUS"
+    ? "0 4px 20px rgba(245,158,11,0.3)"
+    : "0 4px 20px rgba(139,92,246,0.3)";
+}
+
+// ---- Actions ----
+function goBack() {
+  // Go to previous page or home
+  if (document.referrer) {
+    history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+
+function proceedAnyway() {
+  const btn = document.getElementById("proceedBtn");
+  btn.disabled = true;
+  btn.textContent = "Redirecting…";
+  // Clear session storage and redirect
+  sessionStorage.removeItem("warnData");
+  sessionStorage.removeItem("warnUrl");
+  window.location.href = targetUrl;
+}
+</script>
+
+</body>
+</html>
