@@ -11,9 +11,11 @@ from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
 import uuid
+from fastapi.staticfiles import StaticFiles
 
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 load_dotenv()
-MONGO_URL = "mongodb://mongo:27017"
+MONGO_URL = os.getenv("MONGO_URL")
 
 client = MongoClient(MONGO_URL)
 
