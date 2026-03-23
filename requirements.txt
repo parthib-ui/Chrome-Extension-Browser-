@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+validators
+tldextract
+python-dotenv
+pymongo
