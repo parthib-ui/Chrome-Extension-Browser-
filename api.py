@@ -1,5 +1,6 @@
 from datetime import datetime
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 import time
 import validators
@@ -25,6 +26,16 @@ VIRUS_API_KEY = os.getenv("VIRUS_API_KEY")
 #MY_API_KEY = "expl_chk_069"
 
 app = FastAPI()
+
+
+#------------------- CORS ----------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 API_KEY = VIRUS_API_KEY
 
