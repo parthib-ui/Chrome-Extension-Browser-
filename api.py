@@ -15,6 +15,7 @@ import uuid
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 app.mount("/app", StaticFiles(directory="frontend", html=True), name="frontend")
 load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
