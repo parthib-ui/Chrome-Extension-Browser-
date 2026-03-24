@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 import requests
 import time
 import validators
@@ -39,6 +40,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/app")
 
 API_KEY = VIRUS_API_KEY
 
