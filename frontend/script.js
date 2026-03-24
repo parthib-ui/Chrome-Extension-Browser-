@@ -1,4 +1,4 @@
-const BASE = "https://chrome-extension-browser-jqtb.onrender.com/";
+const BASE = "https://chrome-extension-browser-jqtb.onrender.com";
 
 // ===================== HISTORY =====================
 const HISTORY_KEY = "url_sentinel_history";
