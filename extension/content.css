@@ -1,0 +1,73 @@
+/* =========================================================
+   URL Sentinel — content.css
+   Toast notification injected into every page
+   Uses a shadow-like approach with extreme z-index and
+   scoped class names to avoid style conflicts.
+   ========================================================= */
+
+#__url_sentinel_toast__ {
+  all: initial;
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 2147483647; /* max possible */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-family: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  max-width: 320px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+#__url_sentinel_toast__.ust-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Scanning state */
+#__url_sentinel_toast__.ust-scanning {
+  background: rgba(20, 22, 36, 0.95);
+  border: 1px solid rgba(108, 99, 255, 0.35);
+  color: #c4c6e8;
+}
+
+/* Safe state */
+#__url_sentinel_toast__.ust-safe {
+  background: rgba(10, 30, 18, 0.95);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+/* Warning / Unknown state */
+#__url_sentinel_toast__.ust-warn {
+  background: rgba(30, 22, 8, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+}
+
+/* Malicious state */
+#__url_sentinel_toast__.ust-danger {
+  background: rgba(30, 8, 8, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+#__url_sentinel_toast__ .ust-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+#__url_sentinel_toast__ .ust-msg {
+  flex: 1;
+}

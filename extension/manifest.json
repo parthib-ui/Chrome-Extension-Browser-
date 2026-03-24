@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "URL Sentinel",
+  "version": "1.0.0",
+  "description": "Real-time URL safety scanner — checks every link you click for phishing and malware.",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "URL Sentinel",
+    "default_icon": {
+      "16":  "assets/icon.png",
+      "48":  "assets/icon.png",
+      "128": "assets/icon.png"
+    }
+  },
+
+  "icons": {
+    "16":  "assets/icon.png",
+    "48":  "assets/icon.png",
+    "128": "assets/icon.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["warning.html", "assets/*"],
+      "matches":   ["<all_urls>"]
+    }
+  ]
+}

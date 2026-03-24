@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Sentinel</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="logo">
+      <img src="assets/icon.png" alt="URL Sentinel" />
+      <div>
+        <div class="logo-name">URL SENTINEL</div>
+        <div class="logo-sub">Real-time threat scanner</div>
+      </div>
+    </div>
+    <div class="status-dot" id="statusDot" title="Extension active"></div>
+  </header>
+
+  <!-- ===== SCAN CARD ===== -->
+  <main class="main">
+    <div class="scan-label">ENTER A URL TO SCAN</div>
+    <div class="input-row">
+      <input
+        id="urlInput"
+        class="scan-input"
+        type="text"
+        placeholder="https://example.com/link"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+    <button id="scanBtn" class="btn-scan">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">Scan URL</span>
+    </button>
+
+    <!-- Result -->
+    <div id="resultBox" class="result-box"></div>
+    <!-- Error -->
+    <div id="errorMsg" class="error-msg"></div>
+  </main>
+
+  <!-- ===== HISTORY ===== -->
+  <section class="history-section">
+    <div class="history-header">
+      <span class="history-title">Recent Scans</span>
+      <button class="btn-clear" id="btnClear">🗑 Clear</button>
+    </div>
+    <div id="historyList"></div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">Powered by VirusTotal · 90+ engines</footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

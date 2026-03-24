@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚠️ Warning — Unsafe URL | URL Sentinel</title>
+  <meta name="description" content="This URL has been flagged as potentially dangerous by URL Sentinel." />
+  <link rel="stylesheet" href="warning.css" />
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <a class="nav-logo" href="#" id="navLogoBack">
+    <img src="assets/icon.png" alt="URL Sentinel Logo" />
+    <span class="nav-logo-text">URL SENTINEL</span>
+  </a>
+  <span class="nav-badge" id="navBadge" style="border-color:rgba(239,68,68,0.3);color:#ef4444;background:rgba(239,68,68,0.08);">⚠ Threat Detected</span>
+</nav>
+
+<!-- ===== WARNING PAGE ===== -->
+<div class="warn-page" id="warnPage">
+  <div class="warn-card" id="warnCard">
+
+    <!-- Pulsing icon -->
+    <div class="warn-icon malicious" id="warnIcon">🚨</div>
+
+    <!-- Heading -->
+    <h1 class="warn-heading malicious" id="warnHeading">Malicious URL Detected</h1>
+
+    <!-- Description -->
+    <p class="warn-desc" id="warnDesc">
+      This URL has been identified as <strong>malicious</strong> by multiple security engines.
+      Visiting this site may expose you to malware, phishing, or identity theft.
+    </p>
+
+    <!-- URL box -->
+    <div class="warn-url-box">
+      <div class="warn-url-label">Destination URL</div>
+      <div class="warn-url-value" id="warnUrl">—</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="warn-stats" id="warnStats" style="display:none">
+      <div class="warn-stat">
+        <div class="ws-val m" id="statM">0</div>
+        <div class="ws-lbl">Malicious</div>
+      </div>
+      <div class="warn-stat">
+        <div class="ws-val s" id="statS">0</div>
+        <div class="ws-lbl">Suspicious</div>
+      </div>
+      <div class="warn-stat">
+        <div class="ws-val h" id="statH">0</div>
+        <div class="ws-lbl">Harmless</div>
+      </div>
+      <div class="warn-stat">
+        <div class="ws-val u" id="statU">0</div>
+        <div class="ws-lbl">Undetected</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="warn-actions">
+      <button class="warn-btn-back" id="btnBack">← Go Back to Safety</button>
+      <button class="warn-btn-proceed malicious" id="proceedBtn">
+        ⚠ Proceed Anyway
+      </button>
+    </div>
+
+    <a href="#" id="backLink" class="warn-back-link">← Scan a different URL</a>
+  </div>
+</div>
+
+<script src="warning.js"></script>
+</body>
+</html>

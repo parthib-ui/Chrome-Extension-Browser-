@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import requests
 import time
+import base64
 import validators
 import tldextract
 import socket
@@ -105,47 +106,115 @@ suspicious_words = [
 # ---------------- HELPERS ----------------
 
 def normalize_url(url: str):
-
     url = url.strip()
-
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
-
     return url
 
-
 def check_url_format(url):
-
     if not validators.url(url):
         return False
-
     return True
 
-
 def check_shortener(domain):
-
-    if domain in shorteners:
-        return True
-
-    return False
-
+    return domain in shorteners
 
 def check_keywords(url):
-
     for word in suspicious_words:
         if word in url.lower():
             return True
-
     return False
 
-
 def get_ip(domain):
-
     try:
-        ip = socket.gethostbyname(domain)
-        return ip
+        return socket.gethostbyname(domain)
     except:
         return None
+
+def get_vt_url_id(url: str) -> str:
+    """Compute the VirusTotal URL identifier (base64url, no padding)."""
+    return base64.urlsafe_b64encode(url.encode()).decode().rstrip("=")
+
+def _vt_scan(url: str) -> dict:
+    """
+    Fast VirusTotal scan:
+    1. Try cached result first  → instant if URL was seen before
+    2. Submit fresh scan + poll every 2 s (max 4 attempts = ~8 s worst-case)
+    """
+    url_id = get_vt_url_id(url)
+
+    # --- Step 1: cache lookup ---
+    try:
+        r = requests.get(
+            f"https://www.virustotal.com/api/v3/urls/{url_id}",
+            headers=headers,
+            timeout=8
+        )
+        if r.status_code == 200:
+            data = r.json().get("data", {})
+            stats = data.get("attributes", {}).get("last_analysis_stats")
+            if stats:
+                return stats  # cache hit — return immediately
+    except Exception:
+        pass
+
+    # --- Step 2: submit ---
+    try:
+        resp = requests.post(
+            "https://www.virustotal.com/api/v3/urls",
+            headers=headers,
+            data={"url": url},
+            timeout=10
+        )
+        result = resp.json()
+    except Exception as e:
+        raise RuntimeError("VirusTotal submission failed")
+
+    if "data" not in result:
+        raise RuntimeError("VirusTotal submission error")
+
+    analysis_id = result["data"]["id"]
+
+    # --- Step 3: poll (2 s × 4 = up to 8 s) ---
+    last_stats = None
+    for _ in range(4):
+        time.sleep(2)
+        try:
+            ar = requests.get(
+                f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
+                headers=headers,
+                timeout=8
+            )
+            final = ar.json()
+            if "data" in final:
+                attrs = final["data"].get("attributes", {})
+                last_stats = attrs.get("stats")
+                if attrs.get("status") == "completed" and last_stats:
+                    return last_stats  # done early
+        except Exception:
+            pass
+
+    # Return whatever we have (may be partial)
+    if last_stats:
+        return last_stats
+    raise RuntimeError("Scan timed out")
+
+def compute_status(stats: dict, short: bool, keyword_flag: bool) -> tuple:
+    malicious  = stats.get("malicious",  0)
+    suspicious = stats.get("suspicious", 0)
+    harmless   = stats.get("harmless",   0)
+    undetected = stats.get("undetected", 0)
+    score = 0
+    if malicious  > 0: score += 5
+    if suspicious > 0: score += 3
+    if short:          score += 2
+    if keyword_flag:   score += 2
+    if undetected > harmless: score += 1
+    if score >= 5:   status = "MALICIOUS"
+    elif score >= 3: status = "SUSPICIOUS"
+    elif score >= 1: status = "UNKNOWN"
+    else:            status = "SAFE"
+    return status, score
 
 @app.post("/generate-key")
 def generate_key():
@@ -220,232 +289,62 @@ def all_keys():
 
 @app.get("/scan-url")
 def scan_url(url: str):
-
     url = normalize_url(url)
-
     if not check_url_format(url):
         return {"error": "Invalid URL"}
 
-    ext = tldextract.extract(url)
-
+    ext    = tldextract.extract(url)
     domain = ext.domain + "." + ext.suffix
-
-    short = check_shortener(domain)
-
+    short        = check_shortener(domain)
     keyword_flag = check_keywords(url)
 
-    ip = get_ip(domain)
-
     try:
+        stats = _vt_scan(url)
+    except RuntimeError as e:
+        return {"error": str(e)}
 
-        response = requests.post(
-            "https://www.virustotal.com/api/v3/urls",
-            headers=headers,
-            data={"url": url}
-        )
-
-        result = response.json()
-
-    except Exception as e:
-
-        return {"error": "VirusTotal failed"}
-
-    if "data" not in result:
-        return {"error": "VT error"}
-
-    analysis_id = result["data"]["id"]
-
-    time.sleep(5)
-
-    result_response = requests.get(
-        f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-        headers=headers
-    )
-
-    final = result_response.json()
-
-    stats = final["data"]["attributes"]["stats"]
-
-    malicious = stats.get("malicious", 0)
-    suspicious = stats.get("suspicious", 0)
-    harmless = stats.get("harmless", 0)
-    undetected = stats.get("undetected", 0)
-
-    score = 0
-
-    if malicious > 0:
-        score += 5
-
-    if suspicious > 0:
-        score += 3
-
-    if short:
-        score += 2
-
-    if keyword_flag:
-        score += 2
-
-    if undetected > harmless:
-        score += 1
-
-    if score >= 5:
-        status = "MALICIOUS"
-    elif score >= 3:
-        status = "SUSPICIOUS"
-    elif score >= 1:
-        status = "UNKNOWN"
-    else:
-        status = "SAFE"
-
-    return {
-        "url": url,
-        "status": status,
-        "score": score,
-        "stats": stats
-    }
+    status, score = compute_status(stats, short, keyword_flag)
+    return {"url": url, "status": status, "score": score, "stats": stats}
 
 @app.get("/check")
 def check_url(
     url: str,
     x_api_key: str = Header(None)
 ):
-
     verify_api_key(x_api_key)
 
     url = normalize_url(url)
-
-    #  FIX — auto add https if missing
-    url = normalize_url(url)
-
-    # ---------- URL VALIDATION ----------
-
     if not check_url_format(url):
         return {"error": "Invalid URL"}
 
-    parsed = urlparse(url)
-
-    ext = tldextract.extract(url)
-
-    domain = ext.domain + "." + ext.suffix
-
-    short = check_shortener(domain)
-
+    parsed       = urlparse(url)
+    ext          = tldextract.extract(url)
+    domain       = ext.domain + "." + ext.suffix
+    short        = check_shortener(domain)
     keyword_flag = check_keywords(url)
-
-    ip = get_ip(domain)
-
-    # ---------- VIRUSTOTAL STEP 1 ----------
+    ip           = get_ip(domain)
 
     try:
+        stats = _vt_scan(url)
+    except RuntimeError as e:
+        return {"error": str(e)}
 
-        response = requests.post(
-            "https://www.virustotal.com/api/v3/urls",
-            headers=headers,
-            data={"url": url}
-        )
+    status, score = compute_status(stats, short, keyword_flag)
 
-        result = response.json()
-
-    except Exception as e:
-
-        return {
-            "error": "VirusTotal request failed",
-            "details": str(e)
-        }
-
-    if "data" not in result:
-
-        return {
-            "error": "VirusTotal error",
-            "response": result
-        }
-
-    analysis_id = result["data"]["id"]
-
-    # ---------- WAIT FOR SCAN ----------
-
-    time.sleep(10)
-
-    # ---------- VIRUSTOTAL STEP 2 ----------
-
-    try:
-
-        result_response = requests.get(
-            f"https://www.virustotal.com/api/v3/analyses/{analysis_id}",
-            headers=headers
-        )
-
-        final = result_response.json()
-
-    except Exception as e:
-
-        return {
-            "error": "Analysis request failed",
-            "details": str(e)
-        }
-
-    if "data" not in final:
-
-        return {
-            "error": "Analysis error",
-            "response": final
-        }
-
-    stats = final["data"]["attributes"]["stats"]
-
-    malicious = stats.get("malicious", 0)
-    suspicious = stats.get("suspicious", 0)
-    harmless = stats.get("harmless", 0)
-    undetected = stats.get("undetected", 0)
-    timeout = stats.get("timeout", 0)
-
-    # ---------- SCORING ----------
-
-    score = 0
-
-    if malicious > 0:
-        score += 5
-
-    if suspicious > 0:
-        score += 3
-
-    if short:
-        score += 2
-
-    if keyword_flag:
-        score += 2
-
-    if undetected > harmless:
-        score += 1
-
-    # ---------- FINAL STATUS ----------
-
-    if score >= 5:
-        status = "MALICIOUS"
-
-    elif score >= 3:
-        status = "SUSPICIOUS"
-
-    elif score >= 1:
-        status = "UNKNOWN"
-
-    else:
-        status = "SAFE"
-
-    # ---------- RESPONSE ----------
     logs_collection.insert_one({
-        "key": x_api_key,
-        "url": url,
+        "key":    x_api_key,
+        "url":    url,
         "status": status,
-        "time": datetime.now()
+        "time":   datetime.now()
     })
+
     return {
-        "url": url,
-        "domain": domain,
-        "ip": ip,
-        "shortener": short,
+        "url":          url,
+        "domain":       domain,
+        "ip":           ip,
+        "shortener":    short,
         "keyword_flag": keyword_flag,
-        "status": status,
-        "score": score,
-        "stats": stats
+        "status":       status,
+        "score":        score,
+        "stats":        stats
     }
