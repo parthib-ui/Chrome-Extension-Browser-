@@ -337,26 +337,11 @@ body.warn-body {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-/* Outer ring loader */
-.loader, .loader::before, .loader::after {
-  border-width: 2px; border-style: solid; border-radius: 10px;
-  animation: loaderRotate 5s linear infinite;
-}
+/* SVG orbital loader container - no border animation */
 .loader {
   display: flex; align-items: center; justify-content: center;
   position: relative; width: 40px; height: 40px;
-  border-color: #5a4ff3;
 }
-.loader::before, .loader::after {
-  position: absolute; content: "";
-}
-.loader::before {
-  border-color: #35a2d2; width: 110%; height: 110%; animation-delay: 0.5s;
-}
-.loader::after {
-  border-color: #9c40fc; width: 120%; height: 120%; animation-delay: 0.10s;
-}
-@keyframes loaderRotate { to { transform: rotate(360deg); } }
 
 /* SVG car track */
 .container .track {
