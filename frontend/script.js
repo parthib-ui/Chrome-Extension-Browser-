@@ -104,6 +104,14 @@ function showResult(data, rawUrl) {
     UNKNOWN:    { cls: "unknown",    emoji: "❓", colorCls: "c-unknown",  label: "Unknown" },
   };
   const s = map[status] || map["UNKNOWN"];
+
+  // Real counts from scan history — never zero after first scan
+  const h = getHistory();
+  const histMalicious  = h.filter(i => i.status === "MALICIOUS").length;
+  const histSuspicious = h.filter(i => i.status === "SUSPICIOUS").length;
+  const histSafe       = h.filter(i => i.status === "SAFE").length;
+  const histUnknown    = h.filter(i => i.status === "UNKNOWN").length;
+
   resultBox.className = `result-box ${s.cls}`;
   resultBox.innerHTML = `
     <div class="result-head">
@@ -111,13 +119,12 @@ function showResult(data, rawUrl) {
       <span class="result-status-text ${s.colorCls}">${s.label}</span>
     </div>
     <div class="result-url">${data.url || rawUrl}</div>
-    ${data.stats ? `
     <div class="result-meta">
-      <div class="meta-chip"><div class="val c-danger">${data.stats.malicious ?? 0}</div><div class="lbl">Malicious</div></div>
-      <div class="meta-chip"><div class="val c-warn">${data.stats.suspicious ?? 0}</div><div class="lbl">Suspicious</div></div>
-      <div class="meta-chip"><div class="val c-safe">${data.stats.harmless ?? 0}</div><div class="lbl">Harmless</div></div>
-      <div class="meta-chip"><div class="val">${data.stats.undetected ?? 0}</div><div class="lbl">Undetected</div></div>
-    </div>` : ""}
+      <div class="meta-chip"><div class="val c-danger">${histMalicious}</div><div class="lbl">Blocked</div></div>
+      <div class="meta-chip"><div class="val c-warn">${histSuspicious}</div><div class="lbl">Suspicious</div></div>
+      <div class="meta-chip"><div class="val c-safe">${histSafe}</div><div class="lbl">Safe</div></div>
+      <div class="meta-chip"><div class="val">${histUnknown}</div><div class="lbl">Unknown</div></div>
+    </div>
     ${status === "SAFE" ? '<div class="result-redirect">✅ Redirecting you to the site in 2 seconds…</div>' : ""}
   `;
   resultBox.style.display = "block";

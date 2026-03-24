@@ -40,11 +40,11 @@
       <div class="warn-url-value" id="warnUrl">—</div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats (from scan history) -->
     <div class="warn-stats" id="warnStats" style="display:none">
       <div class="warn-stat">
         <div class="ws-val m" id="statM">0</div>
-        <div class="ws-lbl">Malicious</div>
+        <div class="ws-lbl">Total Blocked</div>
       </div>
       <div class="warn-stat">
         <div class="ws-val s" id="statS">0</div>
@@ -52,11 +52,11 @@
       </div>
       <div class="warn-stat">
         <div class="ws-val h" id="statH">0</div>
-        <div class="ws-lbl">Harmless</div>
+        <div class="ws-lbl">Safe URLs</div>
       </div>
       <div class="warn-stat">
         <div class="ws-val u" id="statU">0</div>
-        <div class="ws-lbl">Undetected</div>
+        <div class="ws-lbl">Unknown</div>
       </div>
     </div>
 
@@ -101,14 +101,16 @@
   document.getElementById("navBadge").style.cssText = c.badgeStyle;
   document.getElementById("warnUrl").textContent = targetUrl;
 
-  // Stats
-  if (data.stats) {
-    document.getElementById("statM").textContent = data.stats.malicious  ?? 0;
-    document.getElementById("statS").textContent = data.stats.suspicious ?? 0;
-    document.getElementById("statH").textContent = data.stats.harmless   ?? 0;
-    document.getElementById("statU").textContent = data.stats.undetected ?? 0;
-    document.getElementById("warnStats").style.display = "grid";
-  }
+  // Stats — read from scan history for real counts
+  const scanHistory = (() => {
+    try { return JSON.parse(localStorage.getItem('url_sentinel_history')) || []; }
+    catch { return []; }
+  })();
+  document.getElementById('statM').textContent = scanHistory.filter(h => h.status === 'MALICIOUS').length;
+  document.getElementById('statS').textContent = scanHistory.filter(h => h.status === 'SUSPICIOUS').length;
+  document.getElementById('statH').textContent = scanHistory.filter(h => h.status === 'SAFE').length;
+  document.getElementById('statU').textContent = scanHistory.filter(h => h.status === 'UNKNOWN').length;
+  document.getElementById('warnStats').style.display = 'grid';
 
   // Proceed button colour
   const pb = document.getElementById("proceedBtn");
