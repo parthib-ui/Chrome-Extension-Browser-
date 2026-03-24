@@ -13,6 +13,7 @@ from pymongo import MongoClient
 import uuid
 from fastapi.staticfiles import StaticFiles
 
+app = FastAPI()
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
@@ -27,7 +28,7 @@ VIRUS_API_KEY = os.getenv("VIRUS_API_KEY")
 
 #MY_API_KEY = "expl_chk_069"
 
-app = FastAPI()
+
 
 
 #------------------- CORS ----------------------
