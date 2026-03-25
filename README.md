@@ -26,7 +26,7 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 | Chrome Extension Popup | Unsafe URL Warning Block |
 |:---:|:---:|
-| <img src="/assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="/assets/assets/warning-page.png" width="400" alt="Malicious URL Blocked"> |
+| <img src="/assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="/assets/warning-page.png.png" width="400" alt="Malicious URL Blocked"> |
 
 ---
 
