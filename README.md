@@ -18,7 +18,7 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 ## 📸 Screenshots
 
-*(Replace these placeholder images with the actual screenshots from your project directory)*
+*Screenshots of the project.*
 
 | Web Interface | Scan Results |
 |:---:|:---:|
@@ -29,6 +29,12 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 | <img src="/assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="/assets/warning-page.png.png" width="400" alt="Malicious URL Blocked"> |
 
 ---
+*Short Implementation of the project.*
+## 🎬 Demo
+| Legit Link | Malware Link |
+|:---:|:---:|
+|<img src="/video/ezgif-5556197e8e4b21c2.gif" width="700">| <img src="/video/malware.gif" width="700">|
+
 
 ## ✨ Key Features
 
@@ -64,23 +70,80 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 ---
 
-## 🏗️ Architecture & Flow
+## 🏗️ System Architecture
 
-### 1. Manual Scanning Flow (Web & Popup)
-1. User enters a URL into the scanner.
-2. The Request triggers `/scan-url` on the FastAPI server.
-3. Server normalizes the URL, checks for suspicious patterns, and caches.
-4. If missing from cache, it queries VirusTotal via base64url Identifier.
-5. Scores are aggregated based on VT engines (Malicious/Suspicious/Harmless).
-6. Result mapped to a UI block.
+```mermaid
+flowchart TD
+    %% ── Styling ──────────────────────────────────────────────────
+    classDef user        fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#e0e7ff,rx:8
+    classDef ext         fill:#0f2027,stroke:#38bdf8,stroke-width:2px,color:#bae6fd,rx:8
+    classDef backend     fill:#0d1f12,stroke:#34d399,stroke-width:2px,color:#bbf7d0,rx:8
+    classDef external    fill:#1c0a00,stroke:#fb923c,stroke-width:2px,color:#fed7aa,rx:8
+    classDef db          fill:#1a0533,stroke:#a855f7,stroke-width:2px,color:#e9d5ff,rx:8
+    classDef safe        fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#bbf7d0,rx:8
+    classDef danger      fill:#2d0a0a,stroke:#ef4444,stroke-width:2px,color:#fecaca,rx:8
+    classDef cache       fill:#0c1a2e,stroke:#60a5fa,stroke-width:2px,color:#bfdbfe,rx:8
 
-### 2. Chrome Extension Flow (Click Interception)
-1. You browse normally; `content.js` listens to all left-clicks on `<a>` tags.
-2. Upon click, navigation is paused. The link is dispatched to `background.js`.
-3. An inline "Scanning..." toast notification appears on your screen.
-4. `background.js` hits the FastAPI backend (or uses its local 5-minute memory cache).
-5. **If SAFE:** The toast turns green, and you are automatically redirected.
-6. **If UNSAFE:** The extension opens a local, secure `warning.html` interface detailing the exact threats detected with an option to bypass at your own risk.
+    %% ── Entry Points ─────────────────────────────────────────────
+    WEB["🌐 Web App\n/app — index.html"]:::user
+    POPUP["🧩 Extension Popup\npopup.html"]:::ext
+    CLICK["🖱️ User Clicks a Link\ncontent.js intercepts"]:::ext
+
+    %% ── Extension Layer ──────────────────────────────────────────
+    TOAST["💬 'Scanning…' Toast\nOverlay injected by content.js"]:::ext
+    BG["⚙️ background.js\nService Worker"]:::ext
+    EXCACHE{"🗄️ Extension Cache\n5-min memory cache"}:::cache
+
+    %% ── FastAPI Backend ──────────────────────────────────────────
+    API["🚀 FastAPI Backend\napi.py :8000"]:::backend
+    NORM["🔍 URL Normaliser\n+ Pattern Check"]:::backend
+    SVRCACHE{"🗄️ Server Cache\nIn-memory LRU"}:::cache
+    ENCODE["🔐 Base64url Encoder\nVirusTotal Identifier"]:::backend
+
+    %% ── External API ─────────────────────────────────────────────
+    VT["🛡️ VirusTotal API v3\n90+ Threat Engines"]:::external
+
+    %% ── Database ─────────────────────────────────────────────────
+    MONGO[("🍃 MongoDB\nScan History Log")]:::db
+
+    %% ── Results ──────────────────────────────────────────────────
+    SCORE["📊 Score Aggregator\nMalicious / Suspicious / Harmless"]:::backend
+    SAFE["✅ SAFE\nRedirect User"]:::safe
+    WARN["🚨 WARNING PAGE\nwarning.html\nBypass at own risk"]:::danger
+
+    %% ── FLOW: Web & Popup ────────────────────────────────────────
+    WEB      -->|"POST /scan-url"| API
+    POPUP    -->|"POST /scan-url"| API
+
+    %% ── FLOW: Extension Click ────────────────────────────────────
+    CLICK    --> TOAST
+    CLICK    --> BG
+    BG       --> EXCACHE
+    EXCACHE  -->|"Cache Miss"| API
+    EXCACHE  -->|"Cache Hit ⚡"| SCORE
+
+    %% ── FLOW: Backend Pipeline ───────────────────────────────────
+    API      --> NORM
+    NORM     --> SVRCACHE
+    SVRCACHE -->|"Cache Miss"| ENCODE
+    SVRCACHE -->|"Cache Hit ⚡"| SCORE
+    ENCODE   -->|"GET /files/{id}"| VT
+    VT       -->|"JSON Report"| SCORE
+    SCORE    --> MONGO
+    SCORE    -->|"verdict = SAFE"| SAFE
+    SCORE    -->|"verdict = MALICIOUS\nor SUSPICIOUS"| WARN
+
+    %% ── Result feedback to Toast ─────────────────────────────────
+    SAFE     -.->|"🟢 Toast → auto-redirect"| TOAST
+    WARN     -.->|"🔴 Toast → open warning.html"| TOAST
+```
+
+> **Two paths, one goal — keeping you safe.**
+>
+> | Path | Entry | Decision |
+> |------|-------|----------|
+> | 🌐 **Web / Popup** | User pastes URL → clicks *Scan* | Result card rendered inline |
+> | 🖱️ **Click Interception** | `content.js` intercepts click | Toast updates → redirect or block |
 
 ---
 
