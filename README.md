@@ -12,6 +12,16 @@
   <img src="https://img.shields.io/badge/VirusTotal-API_v3-red?logo=virustotal" alt="VirusTotal">
 </p>
 
+<p align="center">
+  <a href="https://chrome-extension-browser-jqtb.onrender.com/app" target="_blank">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-Try%20URL%20Sentinel-6366f1?style=for-the-badge&logoColor=white" alt="Live Demo">
+  </a>
+  &nbsp;
+  <a href="https://chrome-extension-browser-jqtb.onrender.com/app" target="_blank">
+    <img src="https://img.shields.io/website?down_color=ef4444&down_message=Offline&label=Status&style=for-the-badge&up_color=22c55e&up_message=Online&url=https%3A%2F%2Fchrome-extension-browser-jqtb.onrender.com%2Fapp" alt="Status">
+  </a>
+</p>
+
 ---
 
 URL Sentinel is a lightweight, blazing-fast security application designed to protect users from malicious, phishing, and scam links. It offers both a **Web Workspace** for manual URL analysis and a **Chrome Extension** that silently works in the background, intercepting your clicks and verifying link safety in real time against **90+ security engines**.
@@ -26,7 +36,7 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 | Chrome Extension Popup | Unsafe URL Warning Block |
 |:---:|:---:|
-| <img src="assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="assets/warning-page.png" width="400" alt="Malicious URL Blocked"> |
+| <img src="assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="assets/warning-page.png." width="400" alt="Malicious URL Blocked"> |
 
 ---
 *Short Implementation of the project.*
