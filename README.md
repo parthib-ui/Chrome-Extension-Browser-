@@ -22,11 +22,11 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 | Web Interface | Scan Results |
 |:---:|:---:|
-| <img src="assets/screenshots/web-interface.png" width="400" alt="Web Interface"> | <img src="assets/screenshots/scan-result.png" width="400" alt="Result Interface"> |
+| <img src="/assets/web-interface.png" width="400" alt="Web Interface"> | <img src="/assets/scan-result.png" width="400" alt="Result Interface"> |
 
 | Chrome Extension Popup | Unsafe URL Warning Block |
 |:---:|:---:|
-| <img src="assets/screenshots/extension-popup.png" width="400" alt="Popup Menu"> | <img src="assets/screenshots/warning-page.png" width="400" alt="Malicious URL Blocked"> |
+| <img src="/assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="/assets/assets/warning-page.png" width="400" alt="Malicious URL Blocked"> |
 
 ---
 
