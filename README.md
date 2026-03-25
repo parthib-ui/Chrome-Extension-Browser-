@@ -22,6 +22,10 @@
   </a>
 </p>
 
+<p align="center">
+  🔗 <strong><a href="https://chrome-extension-browser-jqtb.onrender.com/app">https://chrome-extension-browser-jqtb.onrender.com/app</a></strong>
+</p>
+
 ---
 
 URL Sentinel is a lightweight, blazing-fast security application designed to protect users from malicious, phishing, and scam links. It offers both a **Web Workspace** for manual URL analysis and a **Chrome Extension** that silently works in the background, intercepting your clicks and verifying link safety in real time against **90+ security engines**.
