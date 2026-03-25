@@ -22,18 +22,23 @@ URL Sentinel is a lightweight, blazing-fast security application designed to pro
 
 | Web Interface | Scan Results |
 |:---:|:---:|
-| <img src="/assets/web-interface.png" width="400" alt="Web Interface"> | <img src="/assets/scan-result.png" width="400" alt="Result Interface"> |
+| <img src="assets/web-interface.png" width="400" alt="Web Interface"> | <img src="assets/scan-result.png" width="400" alt="Result Interface"> |
 
 | Chrome Extension Popup | Unsafe URL Warning Block |
 |:---:|:---:|
-| <img src="/assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="/assets/warning-page.png.png" width="400" alt="Malicious URL Blocked"> |
+| <img src="assets/extension-popup.png" width="400" alt="Popup Menu"> | <img src="assets/warning-page.png" width="400" alt="Malicious URL Blocked"> |
 
 ---
 *Short Implementation of the project.*
 ## 🎬 Demo
-| Legit Link | Malware Link |
-|:---:|:---:|
-|<img src="/video/ezgif-5556197e8e4b21c2.gif" width="700">| <img src="/video/malware.gif" width="700">|
+
+**✅ Safe URL — Auto Redirected**
+
+![Safe URL Demo](video/ezgif-5556197e8e4b21c2.gif)
+
+**🚨 Malicious URL — Blocked & Warned**
+
+![Malware URL Demo](video/malware.gif)
 
 
 ## ✨ Key Features
