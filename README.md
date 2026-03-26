@@ -65,44 +65,36 @@ URL Sentinel is a lightweight, blazing-fast security application that protects u
 > **URL Sentinel does not rely on a single source of truth.**
 > It fuses a custom-trained ML model with live API threat intelligence to maximize accuracy and speed.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  HYBRID DETECTION PIPELINE                  │
-│                                                             │
-│   URL Input                                                 │
-│      │                                                      │
-│      ▼                                                      │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │         Feature Extraction Layer                    │   │
-│  │  • URL Length       • HTTPS Usage                   │   │
-│  │  • '@' Symbol       • Number of Dots                │   │
-│  │  • Special Chars    • Subdomain Depth               │   │
-│  └──────────────┬──────────────────────────────────────┘   │
-│                 │                                           │
-│        ┌────────┴─────────┐                                │
-│        ▼                  ▼                                 │
-│  ┌───────────┐    ┌───────────────────┐                    │
-│  │ ML Model  │    │  VirusTotal API   │                    │
-│  │ (Local)   │    │  (90+ Engines)    │                    │
-│  │           │    │                   │                    │
-│  │ • LogReg  │    │  Cross-vendor     │                    │
-│  │ • Random  │    │  threat intel     │                    │
-│  │   Forest  │    │  in real time     │                    │
-│  │ • XGBoost │    │                   │                    │
-│  └─────┬─────┘    └────────┬──────────┘                    │
-│        │                   │                               │
-│        └─────────┬─────────┘                               │
-│                  ▼                                          │
-│         ┌─────────────────┐                                │
-│         │ Score Aggregator│                                │
-│         │ (Weighted Fusion│                                │
-│         │  + Confidence)  │                                │
-│         └────────┬────────┘                                │
-│                  │                                          │
-│          ┌───────┴───────┐                                 │
-│          ▼               ▼                                  │
-│       ✅ SAFE        🚨 MALICIOUS / SUSPICIOUS             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    classDef input    fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#e0e7ff
+    classDef feat     fill:#0c1a2e,stroke:#60a5fa,stroke-width:2px,color:#bfdbfe
+    classDef ml       fill:#1a0f2e,stroke:#a78bfa,stroke-width:2px,color:#ede9fe
+    classDef api      fill:#1c0a00,stroke:#fb923c,stroke-width:2px,color:#fed7aa
+    classDef score    fill:#0d1f12,stroke:#34d399,stroke-width:2px,color:#bbf7d0
+    classDef safe     fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#bbf7d0
+    classDef danger   fill:#2d0a0a,stroke:#ef4444,stroke-width:2px,color:#fecaca
+
+    URL["🔗 URL Input"]:::input
+
+    FEAT["🔬 Feature Extraction Layer\nURL Length · '@' Symbol · HTTPS Usage\nNumber of Dots · Special Chars · Subdomain Depth"]:::feat
+
+    ML["🤖 ML Model (Local)\n• Logistic Regression\n• Random Forest\n• XGBoost"]:::ml
+
+    API["🛡️ VirusTotal API\n90+ Threat Engines\nCross-vendor threat intel\nin real time"]:::api
+
+    SCORE["📊 Score Aggregator\nWeighted Fusion + Confidence"]:::score
+
+    SAFE["✅ SAFE\nRedirect User"]:::safe
+    WARN["🚨 MALICIOUS / SUSPICIOUS\nWarning Page Shown"]:::danger
+
+    URL   --> FEAT
+    FEAT  --> ML
+    FEAT  --> API
+    ML    --> SCORE
+    API   --> SCORE
+    SCORE -->|"verdict = SAFE"| SAFE
+    SCORE -->|"verdict = MALICIOUS or SUSPICIOUS"| WARN
 ```
 
 ### Why Hybrid?
